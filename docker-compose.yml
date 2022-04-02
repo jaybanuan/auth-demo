@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  keycloak:
+    image: jboss/keycloak:16.1.1
+    ports:
+      - 8080:8080
+      - 9990:9990
+    environment:
+      KEYCLOAK_USER: kc
+      KEYCLOAK_PASSWORD: kc
+      KEYCLOAK_IMPORT:
+
+
+  webapp:
+    image: nginx:1.21.6
+
+
+#  oidc-reverse-proxy:
+#    image: apache-oidc-reverse-proxy:1.0.0
+#    ports:
+#      - 80:80
+#    environment:
+#      OIDC_CLIENT_SECRET:
+#      OIDC_CRYPTO_PASSPHRASE:
+
+
+  oidc-reverse-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.2.1-amd64
+    ports:
+      - 80:4180
+    environment:
+      OAUTH2_PROXY_PROVIDER: oidc
+      OAUTH2_PROXY_CLIENT_ID: auth-demo
+      OAUTH2_PROXY_CLIENT_SECRET:
+      OAUTH2_PROXY_REDIRECT_URL: http://auth-demo/oauth2/callback
+      OAUTH2_PROXY_OIDC_ISSUER_URL: http://keycloak:8080/auth/realms/demo
+      OAUTH2_PROXY_COOKIE_SECRET: "01234567890123456789012345678901"
+      OAUTH2_PROXY_COOKIE_SECURE: "false"
+      OAUTH2_PROXY_COOKIE_NAME: "auth_demo"
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://webapp/
+      OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER: "true"
